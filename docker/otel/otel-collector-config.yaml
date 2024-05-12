@@ -1,0 +1,26 @@
+﻿receivers:
+  otlpreceiver:
+    protocols:
+      grpc:
+        endpoint: "localhost:4317"
+      http:
+        endpoint: "localhost:4318"
+
+processors:
+  batch:
+
+exporters:
+  otlp:
+    endpoint: "logging-service:4317"
+    logging: "Detailed"
+
+
+service:
+  pipelines:
+    logs:
+      receivers: [otlpreceiver]
+      processors: [batch]
+      exporters: [otlp]
+  telemetry:
+    logs:
+      level: "debug"

@@ -1,0 +1,14 @@
+# Use the same Redis image as your base
+FROM redis:6.2
+
+# Install ping command
+RUN apt-get update && apt-get install -y iputils-ping
+
+# Copy the start-sentinel.sh script into the image
+COPY start-sentinel.sh /start-sentinel.sh
+COPY sentinel.conf /etc/redis/sentinel.conf
+# Make sure the script is executable
+RUN chmod +x /start-sentinel.sh
+
+# Specify the command to run your script
+CMD ["/start-sentinel.sh"]

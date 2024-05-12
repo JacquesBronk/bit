@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <LangVersion>12</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AssemblyName>Bit.Log.Lib</AssemblyName>
+        <RootNamespace>Bit.Log</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <Folder Include="App\" />
+      <Folder Include="Infra\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="OpenTelemetry" Version="1.8.1" />
+      <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.8.1" />
+      <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.8.1" />
+      <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.8.1" />
+      <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" Version="1.8.0" />
+    </ItemGroup>
+
+</Project>

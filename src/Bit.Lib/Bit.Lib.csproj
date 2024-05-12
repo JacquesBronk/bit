@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <LangVersion>12</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <NoWarn>$(NoWarn);1591</NoWarn>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <Folder Include="Infra\Kafka\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="AspNetCore.HealthChecks.Redis" Version="8.0.1" />
+      <PackageReference Include="CloudNative.CloudEvents" Version="2.7.1" />
+      <PackageReference Include="CloudNative.CloudEvents.Kafka" Version="2.7.1" />
+      <PackageReference Include="CloudNative.CloudEvents.SystemTextJson" Version="2.7.1" />
+      <PackageReference Include="FluentValidation" Version="11.9.1" />
+      <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.0" />
+      <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
+      <PackageReference Include="StackExchange.Redis" Version="2.7.33" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Bit.Log.Lib\Bit.Log.Lib.csproj" />
+    </ItemGroup>
+
+</Project>
