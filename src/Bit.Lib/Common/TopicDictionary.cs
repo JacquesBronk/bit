@@ -1,6 +1,6 @@
 ﻿namespace Bit.Lib.Common;
 
-public static class Topics
+public static class TopicDictionary
 {
     public const string Infra = "infra";
     public const string Data = "data";
