@@ -4,6 +4,8 @@ using Bit.Lib;
 using Bit.Lib.Common.Exception;
 using Bit.Lib.Infra;
 using Bit.Lib.Infra.Os;
+using Bit.Log;
+using Bit.Log.Infra.Telemetry;
 using Bit.Middleware;
 using Microsoft.AspNetCore.HttpLogging;
 using StackExchange.Redis;
@@ -60,9 +62,11 @@ public static class DependencyInjection
             logging.RequestBodyLogLimit = 4096;
             logging.ResponseBodyLogLimit = 4096;
         });
+
         services.AddLogging();
         services.AddMetrics();
         services.AddBitServices();
+        services.AddAllBitMeters(MetricExporterType.OpenTelemetryCollector);
 
         return services;
     }

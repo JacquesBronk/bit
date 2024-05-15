@@ -252,7 +252,7 @@ Providing you with a structured exception, that you can log, and easily understa
 In the appsettings.json file, you can configure the logging providers.
 
 ```json
-  {
+{
   "Logging": {
     "LogLevel": {
       "Default": "Information",
@@ -283,7 +283,44 @@ In the appsettings.json file, you can configure the logging providers.
         }
       }
     }
-  }
+  },
+  "Histograms": [
+    {
+      "Name": "http_request_duration",
+      "Unit": "milliseconds",
+      "Description": "Distribution of HTTP request durations"
+    },
+    {
+      "Name": "http_response_size",
+      "Unit": "bytes",
+      "Description": "Distribution of HTTP response sizes"
+    },
+    {
+      "Name": "db_query_duration",
+      "Unit": "milliseconds",
+      "Description": "Distribution of database query durations"
+    },
+    {
+      "Name": "cache_hit_latency",
+      "Unit": "milliseconds",
+      "Description": "Distribution of cache hit latencies"
+    },
+    {
+      "Name": "queue_processing_time",
+      "Unit": "milliseconds",
+      "Description": "Distribution of queue processing times"
+    },
+    {
+      "Name": "memory_allocation",
+      "Unit": "bytes",
+      "Description": "Distribution of memory allocations"
+    }
+  ],
+  "ConnectionStrings": {
+    "Redis": "localhost:6379,abortConnect\u003dfalse,ssl\u003dfalse,allowAdmin\u003dtrue,defaultDatabase\u003d0,connectTimeout\u003d1000,responseTimeout\u003d1000,syncTimeout\u003d1000,connectRetry\u003d3,name\u003dbits"
+  },
+  "AllowedHosts": "*",
+  "ApiKey": "xxxxx"
 }
 
 

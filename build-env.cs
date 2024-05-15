@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using Newtonsoft.Json.Linq;
 
 public class buildenv
 {
@@ -13,10 +14,27 @@ public class buildenv
     private const string ErrorColor = "\u001b[31m";
     private const string ResetColor = "\u001b[0m";
 
-    public static void Main()
+    public static void Main(string[] args)
     {
         try
         {
+            if (args.Length < 1)
+            {
+                WriteColoredMessage("[ERROR] Usage: dotnet run <path-to-appsettings.json> [--env-renew]", ErrorColor);
+                return;
+            }
+
+            string appSettingsPath = args[0];
+            bool envRenew = args.Length > 1 && args[1] == "--env-renew";
+
+            if (envRenew)
+            {
+                GenerateEnvFile(appSettingsPath);
+                return;
+            }
+
+            GenerateEnvFile(appSettingsPath);
+
             List<string> services = GetDockerComposeServices();
             if (services.Count == 0)
             {
@@ -121,6 +139,71 @@ public class buildenv
         else
         {
             Console.WriteLine($"{color}{message}{ResetColor}");
+        }
+    }
+
+    private static void GenerateEnvFile(string appSettingsPath)
+    {
+        string envFilePath = Path.Combine(Directory.GetCurrentDirectory(), ".env");
+
+        try
+        {
+            if (!File.Exists(appSettingsPath))
+            {
+                WriteColoredMessage($"[ERROR] File not found: {appSettingsPath}", ErrorColor);
+                return;
+            }
+
+            var jsonContent = File.ReadAllText(appSettingsPath);
+            var jsonObject = JObject.Parse(jsonContent);
+
+            var envContent = GenerateEnvContent(jsonObject, string.Empty);
+            File.WriteAllText(envFilePath, envContent);
+
+            WriteColoredMessage($"[INFO] Environment variables written to: {envFilePath}", InfoColor);
+        }
+        catch (Exception ex)
+        {
+            WriteColoredMessage($"[ERROR] An error occurred while generating the .env file: {ex.Message}", ErrorColor);
+        }
+    }
+
+    private static string GenerateEnvContent(JObject jsonObject, string prefix)
+    {
+        var envVariables = jsonObject.Properties()
+            .SelectMany(prop => ProcessProperty(prop, prefix))
+            .ToList();
+
+        return string.Join(Environment.NewLine, envVariables);
+    }
+
+    private static IEnumerable<string> ProcessProperty(JProperty prop, string prefix)
+    {
+        string key = string.IsNullOrEmpty(prefix) ? prop.Name : $"{prefix}__{prop.Name}";
+
+        if (prop.Value is JObject childObject)
+        {
+            return GenerateEnvContent(childObject, key);
+        }
+        else if (prop.Value is JArray array)
+        {
+            return array.Select((item, index) => ProcessArrayItem(item, $"{key}__{index}")).SelectMany(x => x);
+        }
+        else
+        {
+            return new[] { $"{key}={prop.Value}" };
+        }
+    }
+
+    private static IEnumerable<string> ProcessArrayItem(JToken item, string key)
+    {
+        if (item is JObject childObject)
+        {
+            return GenerateEnvContent(childObject, key);
+        }
+        else
+        {
+            return new[] { $"{key}={item}" };
         }
     }
 }

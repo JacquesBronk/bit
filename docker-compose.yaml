@@ -6,6 +6,13 @@ networks:
 
 
 services:
+  bit:
+    build:
+      context: ./src/Bit
+      dockerfile: Dockerfile
+    ports:
+        - "5000:8080"
+  
   redis-master:
     image: redis:6.2
     ports:
