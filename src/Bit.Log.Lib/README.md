@@ -252,29 +252,39 @@ Providing you with a structured exception, that you can log, and easily understa
 In the appsettings.json file, you can configure the logging providers.
 
 ```json
-{
+  {
   "Logging": {
     "LogLevel": {
       "Default": "Information",
-      "Microsoft": "Warning",
-      "Microsoft.Hosting.Lifetime": "Information"
+      "Microsoft.AspNetCore": "Warning",
+      "Microsoft.Hosting.Lifetime": "Information",
+      "System": "Warning",
+      "Microsoft": "Warning"
     },
-    "Providers": {
-      "Console": {
-        "IncludeScopes": true
-      },
-      "File": {
+    "Console": {
+      "IncludeScopes": true,
+      "FormatterName": "json",
+      "FormatterOptions": {
         "IncludeScopes": true,
-        "Path": "logs/log.txt",
-        "Append": true
+        "TimestampFormat": "yyyy-MM-ddTHH:mm:ss.fffZ",
+        "UseUtcTimestamp": true,
+        "JsonWriterOptions": {
+          "Indented": false
+        }
+      }
+    },
+    "OpenTelemetry": {
+      "Traces": {
+        "Sampler": "ParentBased(AlwaysOn)",
+        "Exporter": "otlp",
+        "OtlpExporterOptions": {
+          "Endpoint": "http://localhost:4317",
+          "Protocol": "http/protobuf"
+        }
       }
     }
   }
 }
-```
-
-
-```csharp
 
 
 ```

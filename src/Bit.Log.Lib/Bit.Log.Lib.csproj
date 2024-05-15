@@ -11,14 +11,21 @@
 
     <ItemGroup>
       <Folder Include="App\" />
+      <Folder Include="Common\" />
       <Folder Include="docs\assets\" />
-      <Folder Include="Infra\" />
+      <Folder Include="Domain\" />
+      <Folder Include="Infra\Telemetry\Instrimentation\" />
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="Azure.Monitor.OpenTelemetry.Exporter" Version="1.2.0" />
+      <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
       <PackageReference Include="OpenTelemetry" Version="1.8.1" />
+      <PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.8.1" />
       <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.8.1" />
+      <PackageReference Include="OpenTelemetry.Exporter.Zipkin" Version="1.8.1" />
       <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.8.1" />
+      <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.8.1" />
       <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.8.1" />
       <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" Version="1.8.0" />
     </ItemGroup>

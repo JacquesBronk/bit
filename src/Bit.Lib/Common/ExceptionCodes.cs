@@ -23,5 +23,6 @@ public static class ExceptionCodes
         public const string CannotUpdateKey = $"{TopicDictionary.Infra}.{TopicDictionary.Data}.{TopicDictionary.Update}.{ExceptionPrefix}";
         public const string FeatureDisabled = $"{TopicDictionary.Infra}.{TopicDictionary.Feature}.{TopicDictionary.FlagIsDisabled}.{ExceptionPrefix}";
         public const string KeyNotFound = $"{TopicDictionary.Infra}.{TopicDictionary.Data}.{TopicDictionary.Missing}.{ExceptionPrefix}";
+        public const string CannotRecordHistogram = $"{TopicDictionary.Infra}.{TopicDictionary.Data}.{TopicDictionary.Histogram}.{TopicDictionary.HistogramWorker}.{TopicDictionary.RecordHistogram}.{ExceptionPrefix}";
     }
 }

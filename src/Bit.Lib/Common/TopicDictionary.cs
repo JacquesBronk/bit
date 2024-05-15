@@ -27,4 +27,7 @@ public static class TopicDictionary
     public const string ApiKey = "api-key";
     public const string Unauthorized = "unauthorized";
     public const string Security = "secutiry";
+    public const string Histogram = "histogram";
+    public const string HistogramWorker = "histogram-worker";
+    public const string RecordHistogram = "record-histogram";
 }

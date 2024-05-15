@@ -1,6 +1,6 @@
-﻿namespace Bit.Log.Domain;
+﻿namespace Bit.Log.Infra.Telemetry;
 
-public static class Telemetry
+public static class CommonMetrics
 {
     public static class Infrastructure
     {
