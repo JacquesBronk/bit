@@ -1,4 +1,5 @@
 ﻿using Bit.Lib.App;
+using Bit.Log.Common;
 
 namespace Bit.Lib.Common.CloudEvent;
 

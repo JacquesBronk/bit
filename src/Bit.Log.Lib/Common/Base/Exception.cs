@@ -1,6 +1,6 @@
-﻿using Bit.Lib.Common.Exception;
+﻿using Bit.Log.Common.Exception;
 
-namespace Bit.Lib.Common.Base;
+namespace Bit.Log.Common.Base;
 
 public abstract class BaseException(string errorCode, string message, string methodName, Severity severity, string[] args, System.Exception? innerException = null)
     : System.Exception(message, innerException)

@@ -1,13 +1,11 @@
 ﻿using System.Runtime.InteropServices;
 using Bit.EndpointHandlers;
 using Bit.Lib;
-using Bit.Lib.Common.Exception;
 using Bit.Lib.Infra;
 using Bit.Lib.Infra.Os;
 using Bit.Log;
-using Bit.Log.Infra.Telemetry;
+using Bit.Log.Common.Exception;
 using Bit.Middleware;
-using Microsoft.AspNetCore.HttpLogging;
 using StackExchange.Redis;
 
 namespace Bit;
@@ -18,7 +16,9 @@ public static class DependencyInjection
     {
         builder.Configuration.SetBasePath(AppContext.BaseDirectory)
             .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-            .AddEnvironmentVariables();
+            .AddIniFile("conf/bit.ini", optional: true, reloadOnChange: true)
+            .AddEnvironmentVariables()
+            .AddDockerSecrets();
 
         if (!File.Exists(Path.Combine(AppContext.BaseDirectory, "appsettings.json")))
         {
@@ -49,24 +49,12 @@ public static class DependencyInjection
 
         var redisHost = configuration.GetConnectionString("Redis") ?? throw new RedisConnectionStringEmptyException(nameof(WebApplication.CreateBuilder), "Redis connection string missing",[],new ArgumentNullException(nameof(configuration)));
         services.AddSingleton(ConnectionMultiplexer.Connect(redisHost));
-        services.AddMemoryCache();
-        services.AddHttpLogging(logging =>
-        {
-            logging.LoggingFields = HttpLoggingFields.All;
-            logging.RequestHeaders.Add("Authorization");
-            logging.ResponseHeaders.Add("Authorization");
-            logging.MediaTypeOptions.AddText("application/json");
-            logging.MediaTypeOptions.AddText("application/xml");
-            logging.MediaTypeOptions.AddText("text/plain");
-            logging.MediaTypeOptions.AddText("text/html");
-            logging.RequestBodyLogLimit = 4096;
-            logging.ResponseBodyLogLimit = 4096;
-        });
-
-        services.AddLogging();
-        services.AddMetrics();
+        services.AddMemoryCache(x => x.SizeLimit = 40 * 1024 * 1024);
+    
         services.AddBitServices();
-        services.AddAllBitMeters(MetricExporterType.OpenTelemetryCollector);
+        
+        services.AddDefaultLogging(configuration);
+
 
         return services;
     }
@@ -90,7 +78,7 @@ public static class DependencyInjection
     
     private static void MapEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/{flag}", BitEndpoints.MapGetFlagEndpointHandler).WithName("Get").WithOpenApi();
+        app.MapGet("/", () => string.Empty ).WithName("Get").WithOpenApi();
         app.MapGet("/isEnabled/{flag}", BitEndpoints.MapIsEnabledEndpoint).WithName("IsEnabled").WithOpenApi();
         app.MapPatch("/update/{flag}/{enabled}", BitEndpoints.MapUpdateFlagEndpoint).WithName("Update").WithOpenApi();
         app.MapPost("/create/{flag}/{enabled}", BitEndpoints.MapCreateFlagEndpoint).WithName("Create").WithOpenApi();

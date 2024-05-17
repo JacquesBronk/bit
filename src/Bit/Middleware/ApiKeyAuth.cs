@@ -1,4 +1,4 @@
-﻿using Bit.Lib.Common.Exception;
+﻿using Bit.Log.Common.Exception;
 
 //NOT FOR PRODUCTION USE!!
 namespace Bit.Middleware;

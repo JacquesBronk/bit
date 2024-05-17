@@ -1,4 +1,4 @@
-﻿#!/bin/bash
+#!/bin/bash
 
 # Wait for redis-master to become consistently resolvable
 success_counter=0
@@ -10,13 +10,11 @@ while [[ $success_counter -lt 5 ]]; do
   else
     success_counter=0
     echo "$(date) - waiting for redis-master to be resolvable..."
-    echo "Waiting for redis-master to be resolvable..."
     sleep 1
   fi
 done
 
 echo "$(date) - redis-master resolved. Starting Sentinel."
-echo "redis-master is consistently resolvable. Starting Sentinel."
 
 # Get the IP address of redis-master
 REDIS_MASTER_IP=$(getent hosts redis-master | awk '{ print $1 }')

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Caching.Memory;
+﻿using Bit.Log.Common;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Bit.Lib.Common.CloudEvent;
 

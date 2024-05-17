@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Bit.Lib.Common;
-using Bit.Lib.Common.Exception;
+using Bit.Log.Common;
+using Bit.Log.Common.Exception;
 
 namespace Bit.Lib.App;
 

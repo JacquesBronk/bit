@@ -1,4 +1,4 @@
-﻿namespace Bit.Lib.Common;
+﻿namespace Bit.Log.Common;
 
 public static class ExceptionCodes
 {
@@ -7,12 +7,13 @@ public static class ExceptionCodes
 
     public static class Infrastructure
     {
-        public const string ApiKeyNotFound = $"{TopicDictionary.Infra}.{TopicDictionary.Credential}.{TopicDictionary.Missing}.{ExceptionPrefix}.{TopicDictionary.Critical}.{TopicDictionary.ApiKey}";
-        public const string RedisConnectionStringEmpty = $"{TopicDictionary.Infra}.{TopicDictionary.Connection}.{TopicDictionary.ConnectionString}.{TopicDictionary.Missing}.{CriticalError}.{TopicDictionary.Cache}";
+        public const string ApiKeyNotFound = $"{TopicDictionary.Infra}.{TopicDictionary.Configuration}.{TopicDictionary.Credential}.{TopicDictionary.Missing}.{ExceptionPrefix}.{TopicDictionary.Critical}.{TopicDictionary.ApiKey}";
+        public const string RedisConnectionStringEmpty = $"{TopicDictionary.Infra}.{TopicDictionary.Configuration}.{TopicDictionary.Connection}.{TopicDictionary.ConnectionString}.{TopicDictionary.Missing}.{CriticalError}.{TopicDictionary.Cache}";
         public const string CannotFlushCache = $"{TopicDictionary.Infra}.{TopicDictionary.Cache}.{TopicDictionary.Flush}.{ExceptionPrefix}.{TopicDictionary.Data}.{TopicDictionary.Error}";
         public const string CannotGetMemoryCacheStatistics = $"{TopicDictionary.Infra}.{TopicDictionary.Cache}.{TopicDictionary.MemoryCache}.{TopicDictionary.Statistics}.{ExceptionPrefix}";
         public const string CannotGetRedisCacheStatistics = $"{TopicDictionary.Infra}.{TopicDictionary.Cache}.{TopicDictionary.RedisCache}.{TopicDictionary.Statistics}.{ExceptionPrefix}";
         public const string Unauthorized = $"{TopicDictionary.Infra}.{TopicDictionary.Security}.{TopicDictionary.Unauthorized}.{ExceptionPrefix}";
+        public const string InvalidOtlpExporter = $"{TopicDictionary.Infra}.{TopicDictionary.Configuration}.{TopicDictionary.Statistics}.{TopicDictionary.Otlp}.{ExceptionPrefix}";
     }
 
     public static class Data

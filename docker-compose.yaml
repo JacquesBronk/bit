@@ -4,15 +4,32 @@ networks:
   clear-net:
     driver: bridge
 
+configs:
+  bit-config:
+    file: ./src/Bit/bit.conf
 
 services:
   bit:
     build:
-      context: ./src/Bit
+      context: ./src/
       dockerfile: Dockerfile
     ports:
-        - "5000:8080"
-  
+      - "5000:8080"
+    networks:
+      - bit-net
+    depends_on:
+      - redis-master
+      - redis-replica1
+      - redis-replica2
+      - sentinel1
+      - sentinel2
+      - sentinel3
+      - kafka
+      - zookeeper
+      - otel-collector
+    environment:
+      - bit_config=./app/bit-conf/bit.conf
+
   redis-master:
     image: redis:6.2
     ports:
@@ -30,7 +47,7 @@ services:
     environment:
       OTEL_RESOURCE_ATTRIBUTES: "service.name=redis-master"
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
-  
+
   redis-replica1:
     build:
       context: ./docker/redis
@@ -46,7 +63,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-  
+
   redis-replica2:
     build:
       context: ./docker/redis
@@ -62,7 +79,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-  
+
   sentinel1:
     build:
       context: ./docker/redis
@@ -79,7 +96,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-  
+
   sentinel2:
     build:
       context: ./docker/redis
@@ -96,7 +113,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-  
+
   sentinel3:
     build:
       context: ./docker/redis
@@ -138,7 +155,6 @@ services:
           cpus: '0.5'
           memory: 512M
 
-
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
     ports:
@@ -162,9 +178,32 @@ services:
       - "4318:4318"  # HTTP/1.1
       - "55681:55681" # old OTLP port
     command: ["--config=/etc/otel-collector-config.yaml"]
+    networks:
+      - bit-net
 
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "16686:16686" # UI
+      - "6831:6831/udp" # UDP port for receiving traces
+      - "14250:14250" # grpc
+      - "14268:14268" # HTTP
+    networks:
+      - bit-net
+    environment:
+      COLLECTOR_ZIPKIN_HTTP_PORT: 9411
 
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    networks:
+      - bit-net
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=secret
+    volumes:
+      - grafana-storage:/var/lib/grafana
 
 volumes:
-  redis-master-data:      
-      
+  redis-master-data:
+  grafana-storage:

@@ -1,4 +1,4 @@
-﻿namespace Bit.Lib.Common;
+﻿namespace Bit.Log.Common;
 
 public static class EventCodes
 {

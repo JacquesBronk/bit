@@ -1,4 +1,6 @@
-﻿namespace Bit.Lib.Common.CloudEvent;
+﻿using Bit.Log.Common;
+
+namespace Bit.Lib.Common.CloudEvent;
 
 public static class FlagIsDisabledCloudEvent
 {

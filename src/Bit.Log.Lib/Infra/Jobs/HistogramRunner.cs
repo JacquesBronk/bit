@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.Metrics;
+using Bit.Log.Common.Exception;
 using Bit.Log.Infra.Configuration;
 using Bit.Log.Infra.Telemetry.Metrics;
 using Microsoft.Extensions.Configuration;
@@ -7,18 +8,11 @@ using Microsoft.Extensions.Logging;
 
 namespace Bit.Log.Infra.Jobs;
 
-public class HistogramRunner : BackgroundService
+public class HistogramRunner(HistogramBuilder histogramBuilder, IConfiguration configuration, ILogger<HistogramRunner> logger) : BackgroundService
 {
-    private readonly IReadOnlyList<Histogram<double>> _histograms;
+    private readonly IReadOnlyList<Histogram<double>> _histograms = histogramBuilder
+        .AddHistogramsFromConfiguration(configuration.GetSection("Metrics").Get<MetricsOptions>()).Build();
     private Timer? _timer;
-    private readonly ILogger<HistogramRunner> _logger;
-
-    public HistogramRunner(HistogramBuilder histogramBuilder, IConfiguration configuration, ILogger<HistogramRunner> logger)
-    {
-        _logger = logger;
-        _histograms = histogramBuilder
-            .AddHistogramsFromConfiguration(configuration.GetSection("Metrics").Get<MetricsOptions>()).Build();
-    }
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -37,12 +31,13 @@ public class HistogramRunner : BackgroundService
                 double value = random.NextDouble() * 1000;
                 histogram.Record(value);
             }
-            _logger.LogInformation("{Message}", "Histograms recorded successfully.");
+            logger.LogInformation("{Message}", "Histograms recorded successfully.");
         }
         catch (Exception ex)
         {
-            _logger.LogError(0, ex, "An error occurred while recording histogram values");
-            throw new Exception("RecordHistogramValues", new Exception("Failed to record histogram values"));
+            logger.LogError(0, ex, "An error occurred while recording histogram values");
+            string? stateException = string.IsNullOrWhiteSpace(state?.ToString()) ? string.Empty : state.ToString();
+            throw new CannotRecordHistogramValuesException(nameof(RecordHistogramValues),"An error occurred while recording histogram values",new[] {stateException ?? string.Empty}, ex);
         }
     }
 

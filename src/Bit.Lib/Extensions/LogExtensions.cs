@@ -1,5 +1,6 @@
 ﻿using Bit.Lib.Common;
-using Bit.Lib.Common.Exception;
+using Bit.Log.Common;
+using Bit.Log.Common.Exception;
 using Microsoft.Extensions.Logging;
 
 namespace Bit.Lib.Extensions;

@@ -4,9 +4,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
-using Newtonsoft.Json.Linq;
+using System.Text.Json;
 
-public class buildenv
+public class BuildEnv
 {
     private static readonly string ServicesSecretsBasePath = "./config";
     private const string InfoColor = "\u001b[32m";
@@ -102,12 +102,9 @@ public class buildenv
 
     private static string GenerateSecurePassword(int length = 16)
     {
-        using (var rng = new RNGCryptoServiceProvider())
-        {
-            var bytes = new byte[length];
-            rng.GetBytes(bytes);
-            return Convert.ToBase64String(bytes).Substring(0, length);
-        }
+        var bytes = new byte[length];
+        RandomNumberGenerator.Fill(bytes);
+        return Convert.ToBase64String(bytes).Substring(0, length);
     }
 
     private static string GetBashPath()
@@ -155,7 +152,7 @@ public class buildenv
             }
 
             var jsonContent = File.ReadAllText(appSettingsPath);
-            var jsonObject = JObject.Parse(jsonContent);
+            var jsonObject = JsonDocument.Parse(jsonContent).RootElement;
 
             var envContent = GenerateEnvContent(jsonObject, string.Empty);
             File.WriteAllText(envFilePath, envContent);
@@ -168,42 +165,52 @@ public class buildenv
         }
     }
 
-    private static string GenerateEnvContent(JObject jsonObject, string prefix)
+    private static string GenerateEnvContent(JsonElement jsonObject, string prefix)
     {
-        var envVariables = jsonObject.Properties()
-            .SelectMany(prop => ProcessProperty(prop, prefix))
-            .ToList();
+        var envVariables = new List<string>();
+
+        foreach (var property in jsonObject.EnumerateObject())
+        {
+            envVariables.AddRange(ProcessProperty(property, prefix));
+        }
 
         return string.Join(Environment.NewLine, envVariables);
     }
 
-    private static IEnumerable<string> ProcessProperty(JProperty prop, string prefix)
+    private static IEnumerable<string> ProcessProperty(JsonProperty prop, string prefix)
     {
         string key = string.IsNullOrEmpty(prefix) ? prop.Name : $"{prefix}__{prop.Name}";
 
-        if (prop.Value is JObject childObject)
+        if (prop.Value.ValueKind == JsonValueKind.Object)
         {
-            return GenerateEnvContent(childObject, key);
+            return GenerateEnvContent(prop.Value, key);
         }
-        else if (prop.Value is JArray array)
+        else if (prop.Value.ValueKind == JsonValueKind.Array)
         {
-            return array.Select((item, index) => ProcessArrayItem(item, $"{key}__{index}")).SelectMany(x => x);
+            var arrayItems = new List<string>();
+            int index = 0;
+            foreach (var item in prop.Value.EnumerateArray())
+            {
+                arrayItems.AddRange(ProcessArrayItem(item, $"{key}__{index}"));
+                index++;
+            }
+            return arrayItems;
         }
         else
         {
-            return new[] { $"{key}={prop.Value}" };
+            return new List<string> { $"{key}={prop.Value.ToString()}" };
         }
     }
 
-    private static IEnumerable<string> ProcessArrayItem(JToken item, string key)
+    private static IEnumerable<string> ProcessArrayItem(JsonElement item, string key)
     {
-        if (item is JObject childObject)
+        if (item.ValueKind == JsonValueKind.Object)
         {
-            return GenerateEnvContent(childObject, key);
+            return GenerateEnvContent(item, key);
         }
         else
         {
-            return new[] { $"{key}={item}" };
+            return new List<string> { $"{key}={item.ToString()}" };
         }
     }
 }

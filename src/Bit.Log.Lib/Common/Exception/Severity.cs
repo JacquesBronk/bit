@@ -1,4 +1,4 @@
-﻿namespace Bit.Lib.Common.Exception;
+﻿namespace Bit.Log.Common.Exception;
 
 public enum Severity
 {

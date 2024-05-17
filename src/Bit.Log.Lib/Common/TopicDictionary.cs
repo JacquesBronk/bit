@@ -1,4 +1,4 @@
-﻿namespace Bit.Lib.Common;
+﻿namespace Bit.Log.Common;
 
 public static class TopicDictionary
 {
@@ -30,4 +30,6 @@ public static class TopicDictionary
     public const string Histogram = "histogram";
     public const string HistogramWorker = "histogram-worker";
     public const string RecordHistogram = "record-histogram";
+    public const string Otlp = "otlp";
+    public const string Configuration = "Configuration";
 }

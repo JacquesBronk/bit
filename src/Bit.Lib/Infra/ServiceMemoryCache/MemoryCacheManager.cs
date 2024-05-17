@@ -1,5 +1,5 @@
 ﻿using Bit.Lib.App;
-using Bit.Lib.Common.Exception;
+using Bit.Log.Common.Exception;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Bit.Log.Extensions;

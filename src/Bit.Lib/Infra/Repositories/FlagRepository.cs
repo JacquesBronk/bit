@@ -1,6 +1,6 @@
 ﻿using Bit.Lib.App;
-using Bit.Lib.Common.Exception;
 using Bit.Lib.Infra.ServiceMemoryCache;
+using Bit.Log.Common.Exception;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;

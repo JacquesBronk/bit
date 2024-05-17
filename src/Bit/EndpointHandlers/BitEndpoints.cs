@@ -1,5 +1,6 @@
 ﻿using Bit.Lib.Domain.Service;
 using Bit.Lib.Infra;
+using Bit.Log.Common;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Bit.EndpointHandlers;
@@ -11,6 +12,10 @@ public static class BitEndpoints
         try
         {
             var cloudEvent = await flagService.GetFlag(flag);
+            if (cloudEvent.Type == ExceptionCodes.Data.CannotFindKey)
+            {
+                return Results.NoContent();
+            }
             var cloudEventJson = cloudEvent.ConvertCloudEventToJson();
             return Results.Ok(cloudEventJson);
         }
