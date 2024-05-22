@@ -1,44 +1,53 @@
 ﻿using System.Diagnostics.Metrics;
+using Bit.Log.Extensions;
 using Bit.Log.Infra.Configuration;
 using Bit.Log.Infra.Jobs;
 using Bit.Log.Infra.Telemetry;
 using Bit.Log.Infra.Telemetry.Metrics;
-using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
-using OpenTelemetry.Logs;
 
 namespace Bit.Log;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddLogging(this IServiceCollection services, IConfiguration configuration)
+    
+    public static IHostApplicationBuilder AddServiceDefaults(this IHostApplicationBuilder builder)
     {
-        services.AddHttpLogging(logging =>
+        builder.ConfigureOpenTelemetry();
+
+        builder.AddDefaultHealthChecks();
+
+        builder.Services.AddServiceDiscovery();
+
+        builder.Services.ConfigureHttpClientDefaults(http =>
+        {
+            http.AddStandardResilienceHandler();
+        });
+        
+        builder.Services.AddHttpLogging(logging =>
         {
             logging.RequestHeaders.Add("Authorization");
             logging.ResponseHeaders.Add("Authorization");
             logging.MediaTypeOptions.AddText("application/json");
-            logging.MediaTypeOptions.AddText("application/xml");
-            logging.MediaTypeOptions.AddText("text/plain");
-            logging.MediaTypeOptions.AddText("text/html");
             logging.RequestBodyLogLimit = 4096;
             logging.ResponseBodyLogLimit = 4096;
-        }).AddLogging(logBuilder =>
-        {
-            logBuilder.AddJsonConsole();
-            logBuilder.AddConfiguration(configuration.GetSection("Logging"));
         });
 
-        return services;
-    }
+        return builder;
+    } 
 
-    public static IHostApplicationBuilder ConfigureOpenTelemetry(this IHostApplicationBuilder builder)
+
+    private static IHostApplicationBuilder ConfigureOpenTelemetry(this IHostApplicationBuilder builder)
     {
         builder.Logging.AddOpenTelemetry(x =>
         {
@@ -46,6 +55,18 @@ public static class DependencyInjection
             x.IncludeFormattedMessage = true;
         });
         
+        var hostName = System.Net.Dns.GetHostName();
+        var resourceBuilder = ResourceBuilder.CreateDefault()
+            .AddService("Bit", serviceVersion: "1.0.0")
+            .AddTelemetrySdk()
+            .AddEnvironmentVariableDetector()
+            .AddAttributes(new Dictionary<string, object>
+            {
+                ["service.name"] = "Bit",
+                ["service.instance.id"] = Environment.MachineName,
+                ["host.name"] = hostName
+            });
+
         builder.Services.AddOpenTelemetry()
             .WithMetrics(x =>
             {
@@ -65,54 +86,24 @@ public static class DependencyInjection
                 {
                     x.SetSampler<AlwaysOnSampler>();
                 }
+                else
+                {
+                    x.SetSampler<ParentBasedSampler>();
+                }
                 
-                var resourceBuilder = ResourceBuilder.CreateDefault()
-                    .AddService("Bit", serviceInstanceId: Environment.MachineName)
-                    .AddTelemetrySdk()
-                    .AddAttributes(new[]
-                    {
-                        new KeyValuePair<string, object>("host.name", Environment.MachineName),
-                        new KeyValuePair<string, object>("service.name", "Bit"),
-                        new KeyValuePair<string, object>("service.version", Environment.Version.ToString() )
-                    });
 
-                x.ConfigureResource(_ => resourceBuilder.Build());
                 
                 x.AddAspNetCoreInstrumentation()
                     .AddGrpcClientInstrumentation()
-                    .AddHttpClientInstrumentation();
+                    .AddHttpClientInstrumentation()
+                    .SetResourceBuilder(resourceBuilder);
             });
 
-        builder.AddOpenTelemetryExporters();
-    }
+        builder.Services.Configure<OpenTelemetryLoggerOptions>(logging => logging.AddOtlpExporter());
+        builder.Services.ConfigureOpenTelemetryMeterProvider(metrics => metrics.AddOtlpExporter());
+        builder.Services.ConfigureOpenTelemetryTracerProvider(tracing => tracing.AddOtlpExporter());
 
-    public static IServiceCollection AddBitOpenTelemetry(this IServiceCollection services, Action<MeterProviderBuilder> configureMeters, string exporterType, IConfiguration configuration)
-    {
-        services.Configure<OpenTelemetryOptions>(configuration.GetSection("Logging:OpenTelemetry"));
-    
-        services.AddOpenTelemetry(
-                )
-            .WithMetrics(configureMeters)
-            .WithTracing(tracing =>
-            {
-                var resourceBuilder = ResourceBuilder.CreateDefault()
-                    .AddService("Bit", serviceInstanceId: Environment.MachineName)
-                    .AddTelemetrySdk()
-                    .AddAttributes(new[]
-                    {
-                        new KeyValuePair<string, object>("host.name", Environment.MachineName),
-                        new KeyValuePair<string, object>("service.name", "Bit"),
-                        new KeyValuePair<string, object>("service.version", Environment.Version.ToString() )
-                    });
-
-                tracing.SetResourceBuilder(resourceBuilder);
-
-                tracing.AddAspNetCoreInstrumentation();
-                tracing.AddHttpClientInstrumentation();
-                tracing.AddOtlpExporter();
-            });
-
-        services.AddSingleton(provider =>
+        builder.Services.AddSingleton(provider =>
         {
             var monitor = provider.GetRequiredService<IOptionsMonitor<OpenTelemetryOptions>>();
             var options = monitor.CurrentValue.Metrics;
@@ -123,7 +114,31 @@ public static class DependencyInjection
             return histogramBuilder;
         });
 
-        services.AddHostedService<HistogramRunner>();
-        return services;
+        builder.Services.AddHostedService<HistogramRunner>();
+        
+        builder.Services.AddMetrics();
+
+        return builder;
+    }
+
+
+
+    private static IHostApplicationBuilder AddDefaultHealthChecks(this IHostApplicationBuilder builder)
+    {
+        builder.Services.AddHealthChecks()
+            .AddCheck("self", () => HealthCheckResult.Healthy(), ["live"]);
+
+        return builder;
+    }
+
+    public static WebApplication MapDefaultEndpoints(this WebApplication app)
+    {
+        app.MapHealthChecks("/health");
+        app.MapHealthChecks("/alive", new HealthCheckOptions
+        {
+            Predicate = r => r.Tags.Contains("live")
+        });
+
+        return app;
     }
 }

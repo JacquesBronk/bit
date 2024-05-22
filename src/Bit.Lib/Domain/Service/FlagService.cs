@@ -14,6 +14,11 @@ public class FlagService(IFlagRepository flagRepository, IMemoryCache memoryCach
 
         flagStatus.OnFailure(_ => logger.LogError("{ExceptionMessage}", flagStatus.ToString()));
         
+        flagStatus.OnSuccess(_ =>
+        {
+            logger.LogInformation("{FlagName} is {FlagStatus}", flagName, flagStatus.Value);
+        });
+        
         return flagStatus.ToHasValueEvent();
     }
 
@@ -26,6 +31,11 @@ public class FlagService(IFlagRepository flagRepository, IMemoryCache memoryCach
             logger.LogError("{ExceptionMessage}", isFlagEnabled.ToString());
             isFlagEnabled.GetValueOrThrow();
             Task.FromResult(action);
+        });
+        
+        isFlagEnabled.OnSuccess(_ =>
+        {
+            logger.LogInformation("{FlagName} is {FlagStatus}", flagName, isFlagEnabled.Value);
         });
 
         if (isFlagEnabled.Value.Equals(false))
@@ -41,6 +51,11 @@ public class FlagService(IFlagRepository flagRepository, IMemoryCache memoryCach
         var updateResult = await flagRepository.UpdateFlag(flagName, isEnabled, cancellationToken);
 
         updateResult.OnFailure(_ => logger.LogError("{ExceptionMessage}", updateResult.ToString()));
+        
+        updateResult.OnSuccess(_ =>
+        {
+            logger.LogInformation("{FlagName} is {FlagStatus}", flagName, isEnabled);
+        });
 
         return updateResult.ToFlagUpdatedCloudEvent();
     }
@@ -50,6 +65,11 @@ public class FlagService(IFlagRepository flagRepository, IMemoryCache memoryCach
         var createResult = await flagRepository.CreateFlag(flagName, isEnabled, cancellationToken);
 
         createResult.OnFailure(_ => logger.LogError("{ExceptionMessage}", createResult.ToString()));
+        
+        createResult.OnSuccess(_ =>
+        {
+            logger.LogInformation("{FlagName} is {FlagStatus}", flagName, isEnabled);
+        });
 
         return createResult.ToFlagCreatedCloudEvent();
     }
@@ -59,6 +79,11 @@ public class FlagService(IFlagRepository flagRepository, IMemoryCache memoryCach
         var deleteResult = await flagRepository.DeleteFlag(flagName, cancellationToken);
 
         deleteResult.OnFailure(_ => logger.LogError("{ExceptionMessage}", deleteResult.ToString()));
+        
+        deleteResult.OnSuccess(_ =>
+        {
+            logger.LogInformation("{FlagName} is deleted", flagName);
+        });
 
         return deleteResult.ToFlagDeletedCloudEvent();
     }
@@ -68,6 +93,11 @@ public class FlagService(IFlagRepository flagRepository, IMemoryCache memoryCach
         var flushResult = await flagRepository.FlushCache(cancellationToken);
         
         flushResult.OnFailure(_ => logger.LogError("{ExceptionMessage}", flushResult.ToString()));
+        
+        flushResult.OnSuccess(_ =>
+        {
+            logger.LogInformation("{Cache} is flushed", "MemoryCache");
+        });
         
         return flushResult.ToCacheFlushedCloudEvent();
     }

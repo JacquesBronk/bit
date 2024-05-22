@@ -3,9 +3,7 @@ using Bit.EndpointHandlers;
 using Bit.Lib;
 using Bit.Lib.Infra;
 using Bit.Lib.Infra.Os;
-using Bit.Log;
 using Bit.Log.Common.Exception;
-using Bit.Log.Infra.Telemetry;
 using Bit.Middleware;
 using StackExchange.Redis;
 
@@ -41,25 +39,14 @@ public static class DependencyInjection
        
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen(c => c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "Bit.Lib.xml")));
-        services.AddHealthChecks();
 
         var redisHost = configuration.GetConnectionString("Redis") ?? throw new RedisConnectionStringEmptyException(nameof(WebApplication.CreateBuilder), "Redis connection string missing", [], new ArgumentNullException(nameof(configuration)));
         services.AddSingleton(ConnectionMultiplexer.Connect(redisHost));
         services.AddMemoryCache(x => x.SizeLimit = 40 * 1024 * 1024);
         services.AddBitServices();
 
-        services.AddLogging(configuration)
-            .AddBitOpenTelemetry(meterBuilder =>
-            {
-                meterBuilder.AddMeter(CommonMetrics.Infrastructure.HostingMeter);
-                meterBuilder.AddMeter(CommonMetrics.Infrastructure.KestrelMeter);
-                meterBuilder.AddMeter(CommonMetrics.Redis.RedisMeter);
-                meterBuilder.AddMeter(CommonMetrics.Traffic.RoutingMeter);
-                meterBuilder.AddMeter(CommonMetrics.Traffic.HttpConnectionsMeter);
-                meterBuilder.AddMeter(CommonMetrics.Traffic.RateLimitingMeter);
-                meterBuilder.AddMeter(CommonMetrics.Traffic.DiagnosticsMeter);
-            }, MetricExporterType.Jaeger, configuration
-        );
+        services.AddControllers();
+       
 
         return services;
     }
@@ -72,9 +59,9 @@ public static class DependencyInjection
             app.UseSwaggerUI();
         }
 
-        app.UseHttpsRedirection();
         app.UseMiddleware<ApiKeyAuthenticationMiddleware>();
         
+        app.MapControllers();
         app.MapEndpoints();
         return app;
     }

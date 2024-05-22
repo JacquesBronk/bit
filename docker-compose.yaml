@@ -24,6 +24,11 @@ services:
         condition: service_healthy
     environment:
       - bit_config=./app/bit-conf/bit.conf
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   bit2:
     build:
@@ -36,17 +41,24 @@ services:
         condition: service_healthy
     environment:
       - bit_config=./app/bit-conf/bit.conf
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 5s
+      timeout: 10s
+      retries: 3
 
   redis-master:
     image: redis:6.2
     command: redis-server --port 6379 --appendonly yes
     networks:
       - bit-net
+    ports:
+      - "6379:6379"
     volumes:
       - redis-master-data:/data
     healthcheck:
       test: [ "CMD", "redis-cli", "ping" ]
-      interval: 30s
+      interval: 5s
       timeout: 10s
       retries: 3
 
@@ -133,28 +145,12 @@ services:
       timeout: 10s
       retries: 3
 
-  jaeger:
-    image: jaegertracing/all-in-one:latest
+  aspire-dashboard:
+    image: mcr.microsoft.com/dotnet/nightly/aspire-dashboard:8.0.0-preview.6
     ports:
-      - "16686:16686" # UI
-      - "6831:6831/udp" # UDP port for receiving traces
-      - "14250:14250" # grpc
-      - "14268:14268" # HTTP
-    networks:
-      - bit-net
-    environment:
-      COLLECTOR_ZIPKIN_HTTP_PORT: 9411
-
-  grafana:
-    image: grafana/grafana:latest
-    ports:
-      - "3000:3000"
-    networks:
-      - bit-net
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=secret
-    volumes:
-      - grafana-storage:/var/lib/grafana
+      - "18888:18888"
+      - "4317:18889"
+    restart: unless-stopped
 
   nginx:
     build: 
@@ -167,4 +163,7 @@ services:
       - bit-net
     volumes:
       - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - bit1
+      - bit2
 

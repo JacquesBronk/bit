@@ -1,18 +1,15 @@
 using Bit;
+using Bit.Log;
 
-//host setup
 var builder = WebApplication.CreateBuilder(args);
 
-// Configuration setup
+builder.AddServiceDefaults();
 builder.ConfigureAppConfiguration();
-
-// Services registration
 builder.Services.ConfigureServices(builder.Configuration);
 
-// Build the application
 var app = builder.Build();
 
-// Middleware and endpoints
+app.MapDefaultEndpoints();
 app.ConfigureMiddlewareAndEndpoints();
 
 app.Run();

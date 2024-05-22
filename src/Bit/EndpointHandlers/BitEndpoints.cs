@@ -26,7 +26,7 @@ public static class BitEndpoints
         }
     }
 
-    public static async Task<IResult> MapIsEnabledEndpoint([FromQuery] string flag, [FromServices] IFlagService flagService)
+    public static async Task<IResult> MapIsEnabledEndpoint([FromRoute] string flag, [FromServices] IFlagService flagService)
     {
         try
         {
@@ -40,7 +40,7 @@ public static class BitEndpoints
         }
     }
 
-    public static async Task<IResult> MapUpdateFlagEndpoint(string flag, bool enabled, [FromServices] IFlagService flagService)
+    public static async Task<IResult> MapUpdateFlagEndpoint([FromRoute] string flag, [FromRoute] bool enabled, [FromServices] IFlagService flagService)
     {
         try
         {
@@ -54,7 +54,7 @@ public static class BitEndpoints
         }
     }
 
-    public static async Task<IResult> MapCreateFlagEndpoint(string flag, bool enabled, [FromServices] IFlagService flagService)
+    public static async Task<IResult> MapCreateFlagEndpoint([FromRoute] string flag, [FromRoute] bool enabled, [FromServices] IFlagService flagService)
     {
         try
         {
@@ -68,7 +68,7 @@ public static class BitEndpoints
         }
     }
 
-    public static async Task<IResult> MapDeleteFlagEndpoint(string flag, [FromServices] IFlagService flagService)
+    public static async Task<IResult> MapDeleteFlagEndpoint([FromRoute] string flag, [FromServices] IFlagService flagService)
     {
         try
         {

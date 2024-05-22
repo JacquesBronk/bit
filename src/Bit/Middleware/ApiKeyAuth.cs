@@ -9,7 +9,7 @@ public class ApiKeyAuthenticationMiddleware(RequestDelegate next)
 
     public async Task InvokeAsync(HttpContext context, IConfiguration configuration)
     {
-        if (context.Request.Path.StartsWithSegments("/swagger") && context.Request.Host.Host.Equals("localhost"))
+        if (context.Request.Path.StartsWithSegments("/swagger") || context.Request.Path.StartsWithSegments("/health") || context.Request.Path.StartsWithSegments("/alive"))
         {
             await next(context);
             return;
