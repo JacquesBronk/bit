@@ -15,6 +15,11 @@ public static class CommonMetrics
         public const string DiagnosticsMeter = "Microsoft.AspNetCore.Diagnostics";
         public const string RateLimitingMeter = "Microsoft.AspNetCore.RateLimiting";
     }
+    
+    public static class Application
+    {
+        public const string Bit = "Bit";
+    }
 
     public static class Redis
     {

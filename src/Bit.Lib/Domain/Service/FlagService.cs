@@ -13,7 +13,7 @@ public class FlagService(IFlagRepository flagRepository, IMemoryCache memoryCach
         var flagStatus = await flagRepository.FetchFlagStatus(flagName, cancellationToken);
 
         flagStatus.OnFailure(_ => logger.LogError("{ExceptionMessage}", flagStatus.ToString()));
-
+        
         return flagStatus.ToHasValueEvent();
     }
 

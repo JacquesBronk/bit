@@ -5,6 +5,7 @@ using Bit.Lib.Infra;
 using Bit.Lib.Infra.Os;
 using Bit.Log;
 using Bit.Log.Common.Exception;
+using Bit.Log.Infra.Telemetry;
 using Bit.Middleware;
 using StackExchange.Redis;
 
@@ -15,19 +16,14 @@ public static class DependencyInjection
     public static WebApplicationBuilder ConfigureAppConfiguration(this WebApplicationBuilder builder)
     {
         builder.Configuration.SetBasePath(AppContext.BaseDirectory)
-            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+            .AddJsonFile("appSettings.json", optional: true, reloadOnChange: true)
             .AddIniFile("conf/bit.ini", optional: true, reloadOnChange: true)
             .AddEnvironmentVariables()
             .AddDockerSecrets();
 
-        if (!File.Exists(Path.Combine(AppContext.BaseDirectory, "appsettings.json")))
-        {
-            builder.Configuration.AddDockerSecrets();
-        }
-
         return builder;
     }
-    
+
     public static IServiceCollection ConfigureServices(this IServiceCollection services, IConfiguration configuration)
     {
         string apiKey = configuration["ApiKey"] ?? throw new ApiKeyNotFoundException(nameof(WebApplication.CreateBuilder), []);
@@ -42,23 +38,32 @@ public static class DependencyInjection
         {
             throw new ApiKeyNotFoundException(nameof(WebApplication.CreateBuilder), []);
         }
-
+       
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen(c => c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "Bit.Lib.xml")));
         services.AddHealthChecks();
 
-        var redisHost = configuration.GetConnectionString("Redis") ?? throw new RedisConnectionStringEmptyException(nameof(WebApplication.CreateBuilder), "Redis connection string missing",[],new ArgumentNullException(nameof(configuration)));
+        var redisHost = configuration.GetConnectionString("Redis") ?? throw new RedisConnectionStringEmptyException(nameof(WebApplication.CreateBuilder), "Redis connection string missing", [], new ArgumentNullException(nameof(configuration)));
         services.AddSingleton(ConnectionMultiplexer.Connect(redisHost));
         services.AddMemoryCache(x => x.SizeLimit = 40 * 1024 * 1024);
-    
         services.AddBitServices();
-        
-        services.AddDefaultLogging(configuration);
 
+        services.AddLogging(configuration)
+            .AddBitOpenTelemetry(meterBuilder =>
+            {
+                meterBuilder.AddMeter(CommonMetrics.Infrastructure.HostingMeter);
+                meterBuilder.AddMeter(CommonMetrics.Infrastructure.KestrelMeter);
+                meterBuilder.AddMeter(CommonMetrics.Redis.RedisMeter);
+                meterBuilder.AddMeter(CommonMetrics.Traffic.RoutingMeter);
+                meterBuilder.AddMeter(CommonMetrics.Traffic.HttpConnectionsMeter);
+                meterBuilder.AddMeter(CommonMetrics.Traffic.RateLimitingMeter);
+                meterBuilder.AddMeter(CommonMetrics.Traffic.DiagnosticsMeter);
+            }, MetricExporterType.Jaeger, configuration
+        );
 
         return services;
     }
-    
+
     public static WebApplication ConfigureMiddlewareAndEndpoints(this WebApplication app)
     {
         if (app.Environment.IsDevelopment())
@@ -69,17 +74,15 @@ public static class DependencyInjection
 
         app.UseHttpsRedirection();
         app.UseMiddleware<ApiKeyAuthenticationMiddleware>();
-
-        app.MapGet("/", () => string.Empty);
+        
         app.MapEndpoints();
-
         return app;
     }
-    
+
     private static void MapEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/", () => string.Empty ).WithName("Get").WithOpenApi();
-        app.MapGet("/isEnabled/{flag}", BitEndpoints.MapIsEnabledEndpoint).WithName("IsEnabled").WithOpenApi();
+        app.MapGet("/", () => DateTime.UtcNow.ToString("O"));
+        app.MapGet("/isEnabled/{flag}", BitEndpoints.MapIsEnabledEndpoint).WithName("Get").WithOpenApi();
         app.MapPatch("/update/{flag}/{enabled}", BitEndpoints.MapUpdateFlagEndpoint).WithName("Update").WithOpenApi();
         app.MapPost("/create/{flag}/{enabled}", BitEndpoints.MapCreateFlagEndpoint).WithName("Create").WithOpenApi();
         app.MapDelete("/delete/{flag}", BitEndpoints.MapDeleteFlagEndpoint).WithName("Delete").WithOpenApi();

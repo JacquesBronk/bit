@@ -7,7 +7,7 @@ namespace Bit.EndpointHandlers;
 
 public static class BitEndpoints
 {
-    public static async Task<IResult> MapGetFlagEndpointHandler(string flag, IFlagService flagService)
+    public static async Task<IResult> MapGetFlagEndpointHandler(string flag, [FromServices] IFlagService flagService)
     {
         try
         {
@@ -16,6 +16,7 @@ public static class BitEndpoints
             {
                 return Results.NoContent();
             }
+
             var cloudEventJson = cloudEvent.ConvertCloudEventToJson();
             return Results.Ok(cloudEventJson);
         }
@@ -25,7 +26,7 @@ public static class BitEndpoints
         }
     }
 
-    public static async Task<IResult> MapIsEnabledEndpoint(string flag, IFlagService flagService)
+    public static async Task<IResult> MapIsEnabledEndpoint([FromQuery] string flag, [FromServices] IFlagService flagService)
     {
         try
         {
@@ -39,7 +40,7 @@ public static class BitEndpoints
         }
     }
 
-    public static async Task<IResult> MapUpdateFlagEndpoint(string flag, bool enabled, IFlagService flagService)
+    public static async Task<IResult> MapUpdateFlagEndpoint(string flag, bool enabled, [FromServices] IFlagService flagService)
     {
         try
         {
@@ -53,7 +54,7 @@ public static class BitEndpoints
         }
     }
 
-    public static async Task<IResult> MapCreateFlagEndpoint(string flag, bool enabled, IFlagService flagService)
+    public static async Task<IResult> MapCreateFlagEndpoint(string flag, bool enabled, [FromServices] IFlagService flagService)
     {
         try
         {
@@ -67,7 +68,7 @@ public static class BitEndpoints
         }
     }
 
-    public static async Task<IResult> MapDeleteFlagEndpoint(string flag, IFlagService flagService)
+    public static async Task<IResult> MapDeleteFlagEndpoint(string flag, [FromServices] IFlagService flagService)
     {
         try
         {
@@ -81,7 +82,7 @@ public static class BitEndpoints
         }
     }
 
-    public static async Task<IResult> MapFlushEndpoint(IFlagService flagService)
+    public static async Task<IResult> MapFlushEndpoint([FromServices] IFlagService flagService)
     {
         try
         {

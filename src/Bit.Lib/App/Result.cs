@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using Bit.Lib.Common;
 using Bit.Log.Common;
 using Bit.Log.Common.Exception;
 
@@ -71,23 +70,13 @@ public class Result<T>
         if (error == null)
             throw new ArgumentNullException(nameof(error));
 
-        string errorCode;
-        if (error is InfrastructureException infraEx)
+        string errorCode = error switch
         {
-            errorCode = infraEx.ErrorCode;
-        }
-        else if (error is AppException appEx)
-        {
-            errorCode = appEx.ErrorCode; 
-        }
-        else if (error is DomainException domainEx)
-        {
-            errorCode = domainEx.ErrorCode;
-        }
-        else
-        {
-            errorCode = "UnknownError";
-        }
+            InfrastructureException infraEx => infraEx.ErrorCode,
+            AppException appEx => appEx.ErrorCode,
+            DomainException domainEx => domainEx.ErrorCode,
+            _ => "UnknownError"
+        };
 
         return new Result<T> { Error = error, ErrorCode = errorCode, IsSuccess = false };
     }
