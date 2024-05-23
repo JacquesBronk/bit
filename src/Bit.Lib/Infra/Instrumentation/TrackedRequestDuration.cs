@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics.Metrics;
 
-namespace Bit.Log.Infra.Telemetry.Instrumentation;
+namespace Bit.Lib.Infra.Instrumentation;
 
 public class TrackedRequestDuration(Histogram<double> histogram) : IDisposable
 {

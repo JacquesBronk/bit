@@ -1,5 +1,6 @@
 ﻿using Bit.Lib.Domain.Service;
 using Bit.Lib.Infra;
+using Bit.Lib.Infra.Metrics;
 using Bit.Log.Common;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,8 +8,9 @@ namespace Bit.EndpointHandlers;
 
 public static class BitEndpoints
 {
-    public static async Task<IResult> MapGetFlagEndpointHandler(string flag, [FromServices] IFlagService flagService)
+    public static async Task<IResult> MapGetFlagEndpointHandler(string flag, [FromServices] IFlagService flagService, HttpCommonMetrics commonMetrics)
     {
+        using var durationTracker = commonMetrics.MeasureRequestDuration();
         try
         {
             var cloudEvent = await flagService.GetFlag(flag);
@@ -26,8 +28,9 @@ public static class BitEndpoints
         }
     }
 
-    public static async Task<IResult> MapIsEnabledEndpoint([FromRoute] string flag, [FromServices] IFlagService flagService)
+    public static async Task<IResult> MapIsEnabledEndpoint([FromRoute] string flag, [FromServices] IFlagService flagService, HttpCommonMetrics commonMetrics)
     {
+        using var durationTracker = commonMetrics.MeasureRequestDuration();
         try
         {
             var cloudEvent = await flagService.IsFlagEnabled(flag);
@@ -40,8 +43,9 @@ public static class BitEndpoints
         }
     }
 
-    public static async Task<IResult> MapUpdateFlagEndpoint([FromRoute] string flag, [FromRoute] bool enabled, [FromServices] IFlagService flagService)
+    public static async Task<IResult> MapUpdateFlagEndpoint([FromRoute] string flag, [FromRoute] bool enabled, [FromServices] IFlagService flagService, HttpCommonMetrics commonMetrics)
     {
+        using var durationTracker = commonMetrics.MeasureRequestDuration();
         try
         {
             var cloudEvent = await flagService.UpdateFlag(flag, enabled);
@@ -54,8 +58,9 @@ public static class BitEndpoints
         }
     }
 
-    public static async Task<IResult> MapCreateFlagEndpoint([FromRoute] string flag, [FromRoute] bool enabled, [FromServices] IFlagService flagService)
+    public static async Task<IResult> MapCreateFlagEndpoint([FromRoute] string flag, [FromRoute] bool enabled, [FromServices] IFlagService flagService, HttpCommonMetrics commonMetrics)
     {
+        using var durationTracker = commonMetrics.MeasureRequestDuration();
         try
         {
             var cloudEvent = await flagService.CreateFlag(flag, enabled);
@@ -68,8 +73,9 @@ public static class BitEndpoints
         }
     }
 
-    public static async Task<IResult> MapDeleteFlagEndpoint([FromRoute] string flag, [FromServices] IFlagService flagService)
+    public static async Task<IResult> MapDeleteFlagEndpoint([FromRoute] string flag, [FromServices] IFlagService flagService, HttpCommonMetrics commonMetrics)
     {
+        using var durationTracker = commonMetrics.MeasureRequestDuration();
         try
         {
             var cloudEvent = await flagService.DeleteFlag(flag);
@@ -82,8 +88,9 @@ public static class BitEndpoints
         }
     }
 
-    public static async Task<IResult> MapFlushEndpoint([FromServices] IFlagService flagService)
+    public static async Task<IResult> MapFlushEndpoint([FromServices] IFlagService flagService, HttpCommonMetrics commonMetrics)
     {
+        using var durationTracker = commonMetrics.MeasureRequestDuration();
         try
         {
             var cloudEvent = await flagService.FlushCache();

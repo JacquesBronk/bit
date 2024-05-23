@@ -1,16 +1,10 @@
-﻿using System.Diagnostics.Metrics;
-using Bit.Log.Extensions;
-using Bit.Log.Infra.Configuration;
-using Bit.Log.Infra.Jobs;
-using Bit.Log.Infra.Telemetry;
-using Bit.Log.Infra.Telemetry.Metrics;
+﻿using Bit.Log.Infra.Telemetry;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
@@ -47,7 +41,7 @@ public static class DependencyInjection
     } 
 
 
-    private static IHostApplicationBuilder ConfigureOpenTelemetry(this IHostApplicationBuilder builder)
+    private static void ConfigureOpenTelemetry(this IHostApplicationBuilder builder)
     {
         builder.Logging.AddOpenTelemetry(x =>
         {
@@ -82,16 +76,8 @@ public static class DependencyInjection
             })
             .WithTracing(x =>
             {
-                if (builder.Environment.IsDevelopment())
-                {
-                    x.SetSampler<AlwaysOnSampler>();
-                }
-                else
-                {
-                    x.SetSampler<ParentBasedSampler>();
-                }
+                x.SetSampler<AlwaysOnSampler>();
                 
-
                 
                 x.AddAspNetCoreInstrumentation()
                     .AddGrpcClientInstrumentation()
@@ -103,32 +89,15 @@ public static class DependencyInjection
         builder.Services.ConfigureOpenTelemetryMeterProvider(metrics => metrics.AddOtlpExporter());
         builder.Services.ConfigureOpenTelemetryTracerProvider(tracing => tracing.AddOtlpExporter());
 
-        builder.Services.AddSingleton(provider =>
-        {
-            var monitor = provider.GetRequiredService<IOptionsMonitor<OpenTelemetryOptions>>();
-            var options = monitor.CurrentValue.Metrics;
-
-            var meter = new Meter("Bit.Log.Lib.Meter");
-            var histogramBuilder = new HistogramBuilder(meter);
-            histogramBuilder.AddHistogramsFromConfiguration(options);
-            return histogramBuilder;
-        });
-
-        builder.Services.AddHostedService<HistogramRunner>();
-        
         builder.Services.AddMetrics();
-
-        return builder;
     }
 
 
 
-    private static IHostApplicationBuilder AddDefaultHealthChecks(this IHostApplicationBuilder builder)
+    private static void AddDefaultHealthChecks(this IHostApplicationBuilder builder)
     {
         builder.Services.AddHealthChecks()
             .AddCheck("self", () => HealthCheckResult.Healthy(), ["live"]);
-
-        return builder;
     }
 
     public static WebApplication MapDefaultEndpoints(this WebApplication app)
