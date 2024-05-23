@@ -1,4 +1,8 @@
-﻿# Bit
+﻿# STATUS: WIP
+Note this project is actively being developed, and you're more than welcome to fork it.
+
+
+# Bit
 
 A dotnet distributed Feature Management Api. 
 
@@ -7,5 +11,3 @@ A dotnet distributed Feature Management Api.
 ## Features
 
 Simplified Feature management things.
-
-//TODO: More docs
